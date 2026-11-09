@@ -74,12 +74,21 @@ Android 启动器为**每一对 (BroadcastReceiver, `android.appwidget.provider`
 9. 同步 [README](../README.md#桌面小组件尺寸)、[呈现契约](presentation-contract.md) 的尺寸表与本文表格；如发版则更新 [更新记录](../CHANGELOG.md)。
 10. 执行 `./gradlew testDebugUnitTest assembleDebug lint`，并用 `aapt2 dump xmltree app-debug.apk --file AndroidManifest.xml` 核对 receiver 与 metadata 都进入 APK。
 
-## 已知限制与待验证
+## 已知限制
 
 - 本阶段只增加**尺寸条目**。渲染仍走原 Canvas → `RemoteViews` 管线，受 `WidgetRenderer` 的 250000 像素位图上限约束，竖向高尺寸更容易被降采样；链接点击仍使用 8×8 透明命中网格。没有尺寸自适应 JS API，也没有高清字体/图片渲染改造。
-- 启动器桌面网格行数少于 7 时，声明为 4×7 的默认尺寸可能被裁剪或 clamp；这是平台行为，未用私有接口绕过。
-- `targetCell*` 是否被严格遵循、预览图的裁剪方式、多实例同时添加/配置/刷新/删除的表现，均**待小米 HyperOS 实机测试**，编译与 Robolectric 通过不等于实机通过。
+- 启动器桌面网格行数少于 7 时，声明为 4×7 的默认尺寸可能被裁剪或 clamp；这是平台行为，未用私有接口绕过。本次验证的 HyperOS 设备上未出现裁剪。
 - 后台刷新时机仍由系统调度与电池策略决定，`refreshAfterDate` 只是期望的最早时间。
+
+## 小米 HyperOS 实机验证
+
+已在小米 HyperOS 设备上完成实机验证，结果正常：
+
+- 系统「添加小部件」列表中 8 个尺寸条目全部出现，可分别添加。
+- 默认网格符合声明，包括 4×7 未被裁剪。
+- 多个不同尺寸的实例可分别绑定不同脚本与参数，配置、刷新与删除互不干扰。
+
+上述结论只覆盖启动器的选择器与实例行为；权限、后台调度、系统栏等其他系统能力不在本次验证范围内，仍需单独真机反馈。编译与 Robolectric 通过本身不能替代启动器验收，这里的结论来自实机。
 
 ## 验证命令
 
@@ -91,4 +100,4 @@ node tools/check-api-surface.cjs
 node --test tests/presentation.test.cjs
 ```
 
-本次结果：17/17 Robolectric（其中 7 项为多尺寸用例）、lint 0 error / 48 warning、Worker 122/122、浏览器检查全通过、公开入口 731/731，APK 内 8 个 receiver 与 8 份 metadata 经 `aapt2` 核对一致。
+本次结果：17/17 Robolectric（其中 7 项为多尺寸用例）、lint 0 error / 48 warning、Worker 122/122、浏览器检查全通过、公开入口 731/731，APK 内 8 个 receiver 与 8 份 metadata 经 `aapt2` 核对一致。桌面组件另已在小米 HyperOS 实机验证，详见上一节。

@@ -9,7 +9,7 @@
 - 所有尺寸使用 `targetCellWidth` / `targetCellHeight`（Android 12+）与 `minWidth` / `minHeight`、`minResizeWidth` / `minResizeHeight`、`resizeMode`（旧版）；移除 `configuration_optional`，保证添加时进入配置页，保留 `reconfigurable` 供长按重新配置。
 - 新增 7 项 Robolectric 回归，覆盖 8 尺寸注册、尺寸别名解析、生命周期继承、多实例配置互不覆盖与删除隔离；同步 README、兼容说明、呈现契约及新增的 `docs/widget-sizes.md` 实现说明。
 - 验证：`./gradlew testDebugUnitTest assembleDebug lint`（17/17 单测、lint 0 error / 48 warning）、`npm test`（122/122）、`npm run test:ui`、`node tools/check-api-surface.cjs`（731/731），并用 `aapt2` 核对 APK 内 8 个 receiver 与 8 份 metadata。
-- 待小米 HyperOS 实机测试：选择器条目与预览图、默认网格是否被裁剪（尤其 4×7）、多实例配置/刷新/删除。渲染仍受 250000 像素位图上限约束，本阶段未改造 Canvas 渲染、高清字体或尺寸自适应 JS API。
+- 已在小米 HyperOS 实机验证：8 个尺寸条目全部出现在系统选择器中，默认网格符合声明（4×7 未被裁剪），多个不同尺寸实例可分别绑定脚本并独立配置、刷新与删除，互不干扰。渲染仍受 250000 像素位图上限约束，本阶段未改造 Canvas 渲染、高清字体或尺寸自适应 JS API。
 
 ## 0.2.1
 

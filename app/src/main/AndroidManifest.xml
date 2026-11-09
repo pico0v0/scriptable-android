@@ -43,9 +43,40 @@
                 <data android:scheme="scriptable" />
             </intent-filter>
         </activity>
-        <receiver android:name=".ScriptWidgetProvider" android:exported="false">
+        <!-- Eight independent receivers = eight separate entries in the launcher widget picker.
+             ScriptWidgetProvider keeps its original class name so existing 3x2 widgets survive
+             an upgrade; the other seven are thin subclasses with their own provider metadata. -->
+        <receiver android:name=".WidgetSmallProvider" android:label="@string/widget_name_small" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_small" />
+        </receiver>
+        <receiver android:name=".ScriptWidgetProvider" android:label="@string/widget_name_standard" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info" />
+        </receiver>
+        <receiver android:name=".WidgetWideProvider" android:label="@string/widget_name_wide" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_wide" />
+        </receiver>
+        <receiver android:name=".WidgetLargeProvider" android:label="@string/widget_name_large" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_large" />
+        </receiver>
+        <receiver android:name=".Widget43Provider" android:label="@string/widget_name_4x3" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_4x3" />
+        </receiver>
+        <receiver android:name=".Widget45Provider" android:label="@string/widget_name_4x5" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_4x5" />
+        </receiver>
+        <receiver android:name=".Widget46Provider" android:label="@string/widget_name_4x6" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_4x6" />
+        </receiver>
+        <receiver android:name=".Widget47Provider" android:label="@string/widget_name_4x7" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_4x7" />
         </receiver>
         <activity android:name=".WidgetConfigureActivity" android:exported="true" android:theme="@style/AppTheme">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>

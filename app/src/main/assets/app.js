@@ -541,10 +541,17 @@
     const wrap = document.createElement('div'); wrap.className = 'widget-preview-wrap';
     const preview = treeElement(state.widget, 0); preview.classList.add('widget-preview'); preview.dataset.family = state.widgetFamily || 'medium'; wrap.appendChild(preview);
     const note = document.createElement('p'); note.className = 'widget-footnote'; note.textContent = '添加后可配置组件脚本、参数与刷新频率。'; wrap.appendChild(note);
+    // Pinning is a programmatic add: let the user pick which of the four launcher entries to pin.
+    const sizeRow = document.createElement('label'); sizeRow.className = 'widget-size-row'; sizeRow.textContent = '组件尺寸';
+    const sizeSelect = document.createElement('select'); sizeSelect.className = 'widget-size-select';
+    for (const [value, label] of [['small', '小号 2×2'], ['standard', '标准 3×2'], ['wide', '宽版 4×2'], ['4x3', '4×3 竖版'], ['large', '大号 4×4'], ['4x5', '4×5 长版'], ['4x6', '4×6 超长'], ['4x7', '4×7 全高']]) {
+      const option = document.createElement('option'); option.value = value; option.textContent = label; sizeSelect.appendChild(option);
+    }
+    sizeSelect.value = 'standard'; sizeRow.appendChild(sizeSelect); wrap.appendChild(sizeRow);
     const button = document.createElement('button'); button.className = 'widget-pin'; button.innerHTML = icon('widget') + '添加到主屏幕'; button.onclick = async () => {
       if (!native()) return notify('请在 Android 应用中添加桌面小组件');
       button.disabled = true;
-      try { await hostCall('widget.pin', { scriptId: state.runId, tree: state.widget, family: state.widgetFamily || 'medium' }); notify('已请求添加小组件，请在系统提示中确认'); } catch (error) { notify('无法添加：' + error.message); }
+      try { await hostCall('widget.pin', { scriptId: state.runId, tree: state.widget, family: state.widgetFamily || 'medium', widgetSize: sizeSelect.value }); notify('已请求添加小组件，请在系统提示中确认'); } catch (error) { notify('无法添加：' + error.message); }
       button.disabled = false;
     };
     wrap.appendChild(button); content.appendChild(wrap);

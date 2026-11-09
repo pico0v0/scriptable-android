@@ -29,13 +29,32 @@ Provider contracts for background execution:
 - `instanceConfigs(Context)` returns `{widgetId,scriptId,parameter,family,refreshAfterDate,updatedAt}` records.
 - `save(Context,JSONObject)` respects an optional `targetWidgetId`; a background run must supply `config.widgetId`.
 - `updateInstance(Context,int,JSONObject)` replaces only one widget tree.
-- `requestPin(Context,JSONObject)` accepts optional scriptId/parameter/family and tree.
+- `requestPin(Context,JSONObject)` accepts optional scriptId/parameter/family/tree plus `widgetSize` (or `size`/`provider`), which selects the pinned provider; omitted sizes keep the legacy 3x2 provider.
 - `configure(Context,int,String,String,String)` updates one instance and requests a refresh.
 - `refreshNow(Context)` requests a background run.
 
 Provider calls `WidgetRefreshJob.schedule(Context)` and `WidgetRefreshJob.request(Context,int[] nullable)` when widgets are saved, configured, resized or restored. The platform still controls background timing; refreshAfterDate is a requested earliest date, not a guaranteed exact deadline. Android launcher rendering uses a bitmap with a 250000-pixel cap to limit RemoteViews memory. Individual node links use a transparent 8x8 hit grid, so very small link regions may share a tap area. Accessory widget families have home-screen equivalents because Android launchers do not expose the iOS lock-screen widget system.
 
-Register `WidgetConfigureActivity` as exported with ACTION_APPWIDGET_CONFIGURE. Widget metadata references this activity. The existing ScriptWidgetProvider receiver handles explicit pin-result broadcasts, so it does not need a separate receiver.
+Register `WidgetConfigureActivity` as exported with ACTION_APPWIDGET_CONFIGURE. Every provider metadata references this activity, and it reads `AppWidgetManager.getAppWidgetInfo(widgetId).provider` to display the size being configured. `widgetFeatures` is `reconfigurable` only: `configuration_optional` was removed so hosts cannot silently skip script selection when adding any of the eight sizes; long-pressing a widget can still reconfigure it on Android 12+.
+
+Eight independent receivers produce eight separate entries in the launcher widget picker. `WidgetProviders` is the single registry used by `save`, `instanceConfigs`, pin callbacks and the configuration screen:
+
+| Receiver | Metadata | targetCellWidth x targetCellHeight | minWidth x minHeight |
+| --- | --- | --- | --- |
+| `WidgetSmallProvider` (小号) | `@xml/widget_info_small` | 2 x 2 | 110dp x 110dp |
+| `ScriptWidgetProvider` (标准, legacy) | `@xml/widget_info` | 3 x 2 | 180dp x 110dp |
+| `WidgetWideProvider` (宽版) | `@xml/widget_info_wide` | 4 x 2 | 250dp x 110dp |
+| `Widget43Provider` (4×3) | `@xml/widget_info_4x3` | 4 x 3 | 250dp x 180dp |
+| `WidgetLargeProvider` (大号) | `@xml/widget_info_large` | 4 x 4 | 250dp x 250dp |
+| `Widget45Provider` (4×5) | `@xml/widget_info_4x5` | 4 x 5 | 250dp x 320dp |
+| `Widget46Provider` (4×6) | `@xml/widget_info_4x6` | 4 x 6 | 250dp x 390dp |
+| `Widget47Provider` (4×7) | `@xml/widget_info_4x7` | 4 x 7 | 250dp x 460dp |
+
+Taller sizes follow the standard `70 * rows - 30` dp formula. `widgetSize` accepts both the named sizes (small/standard/wide/large) and the grid literals (`4x3`, `4x5`, `4x6`, `4x7`, also with `×` or `*`), plus provider class names.
+
+`targetCellWidth`/`targetCellHeight` apply on Android 12+ (API 31); older launchers use `minWidth`/`minHeight` and `resizeMode`. Each metadata also declares `minResizeWidth`, `minResizeHeight`, `previewImage` and a size-specific `description`. The extra receivers are empty subclasses of `ScriptWidgetProvider`, which is no longer final and owns onUpdate/onDeleted/onRestored/onAppWidgetOptionsChanged plus all per-appWidgetId storage. The legacy class name is deliberately retained so home-screen widgets installed by older versions stay bound. The shared `ScriptWidgetProvider` receiver handles explicit pin-result broadcasts for every size; the callback validates the bound widget's provider against `WidgetProviders.isScriptable`.
+
+The size-entry work (both the initial four sizes and the later 4x3/4x5/4x6/4x7 batch) only adds picker entries. Rendering still uses the existing Canvas pipeline and the launcher-reported option bundle; there is no size-adaptive JavaScript API or high-resolution rewrite. Tall widgets are more likely to be downscaled by the existing 250000-pixel bitmap cap, and a launcher whose home-screen grid has fewer than seven rows may clamp a declared 4x7 default size. Both are platform behaviour, not private MIUI hooks. Launcher-specific grid behaviour (notably HyperOS) requires device verification. See [widget-sizes.md](widget-sizes.md) for the implementation, upgrade-compatibility notes, the checklist for adding a size and the full device-verification list.
 
 ## Browser preview
 

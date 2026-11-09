@@ -18,6 +18,7 @@ signing.properties
 *.apks
 .idea/
 .vscode/
+.workbuddy-ai/
 *.log
 __pycache__/
 *.pyc

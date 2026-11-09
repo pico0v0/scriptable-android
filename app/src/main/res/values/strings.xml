@@ -1,4 +1,25 @@
 <resources>
     <string name="app_name">Scriptable Android</string>
     <string name="widget_description">显示脚本最近生成的小组件，点击打开脚本。</string>
+
+    <!-- One launcher label per size: the receiver android:label becomes the picker item name. -->
+    <string name="widget_name_small">Scriptable 小号</string>
+    <string name="widget_name_standard">Scriptable 标准</string>
+    <string name="widget_name_wide">Scriptable 宽版</string>
+    <string name="widget_name_large">Scriptable 大号</string>
+
+    <string name="widget_description_small">2×2 小组件 · 可绑定任意脚本和参数</string>
+    <string name="widget_description_standard">3×2 标准小组件 · 兼容原有桌面组件</string>
+    <string name="widget_description_wide">4×2 宽版小组件 · 可绑定任意脚本和参数</string>
+    <string name="widget_description_large">4×4 大号小组件 · 可绑定任意脚本和参数</string>
+
+    <string name="widget_name_4x3">Scriptable 4×3</string>
+    <string name="widget_name_4x5">Scriptable 4×5</string>
+    <string name="widget_name_4x6">Scriptable 4×6</string>
+    <string name="widget_name_4x7">Scriptable 4×7</string>
+
+    <string name="widget_description_4x3">4×3 竖版小组件 · 可绑定任意脚本和参数</string>
+    <string name="widget_description_4x5">4×5 长版小组件 · 可绑定任意脚本和参数</string>
+    <string name="widget_description_4x6">4×6 超长小组件 · 可绑定任意脚本和参数</string>
+    <string name="widget_description_4x7">4×7 全高小组件 · 可绑定任意脚本和参数</string>
 </resources>

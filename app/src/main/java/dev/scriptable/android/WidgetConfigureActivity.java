@@ -24,7 +24,13 @@ public final class WidgetConfigureActivity extends Activity {
         Intent result = new Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId); setResult(RESULT_CANCELED, result);
         if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) { finish(); return; }
         LinearLayout panel = new LinearLayout(this); panel.setOrientation(LinearLayout.VERTICAL); int pad = Math.round(24 * getResources().getDisplayMetrics().density); panel.setPadding(pad, pad * 2, pad, pad); panel.setBackgroundColor(0xFFF4F6FB); setContentView(panel);
+        // The same configuration activity is used by every size provider; resolve the size from
+        // the widget ID so the user can tell which entry they are configuring.
+        android.appwidget.AppWidgetProviderInfo info = AppWidgetManager.getInstance(this).getAppWidgetInfo(widgetId);
+        String size = WidgetProviders.sizeOf(this, info == null ? null : info.provider);
+        String sizeName = getString(WidgetProviders.nameRes(size)) + " · " + WidgetProviders.grid(size);
         TextView title = new TextView(this); title.setText("配置脚本小组件"); title.setTextSize(24); title.setTextColor(0xFF202B40); panel.addView(title);
+        TextView sizeLabel = new TextView(this); sizeLabel.setText(sizeName); sizeLabel.setTextSize(16); sizeLabel.setTextColor(0xFF6658D6); sizeLabel.setPadding(0, pad / 2, 0, 0); panel.addView(sizeLabel);
         TextView hint = new TextView(this); hint.setText("每个小组件可以选择不同脚本和参数。脚本需调用 Script.setWidget(widget)。"); hint.setPadding(0, pad, 0, pad); panel.addView(hint);
         try {
             JSONArray scripts = new ScriptRepository(this).list(); ArrayList<String> names = new ArrayList<>(); for (int i = 0; i < scripts.length(); i++) names.add(scripts.getJSONObject(i).optString("name", "Untitled"));

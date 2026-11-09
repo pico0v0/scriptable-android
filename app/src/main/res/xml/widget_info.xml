@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Legacy 3x2 provider metadata. The receiver class name is unchanged for upgrade compatibility. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:targetApi="s"
+    android:targetCellWidth="3"
+    android:targetCellHeight="2"
     android:minWidth="180dp"
     android:minHeight="110dp"
-    android:minResizeWidth="140dp"
-    android:minResizeHeight="90dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="110dp"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget"
     android:configure="dev.scriptable.android.WidgetConfigureActivity"
-    android:widgetFeatures="reconfigurable|configuration_optional"
+    android:previewImage="@drawable/widget_preview_standard"
+    android:widgetFeatures="reconfigurable"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
-    android:description="@string/app_name" />
+    android:description="@string/widget_description_standard" />

@@ -20,8 +20,16 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
-/** Per-instance script widgets rendered with a full Canvas layout instead of flattened text. */
-public final class ScriptWidgetProvider extends AppWidgetProvider {
+/**
+ * Shared implementation for every widget size, rendering per-instance scripts with a full Canvas
+ * layout instead of flattened text.
+ *
+ * This class is intentionally no longer final and stays registered under its original name: it is
+ * the legacy 3x2 "standard" provider AND the base class for {@link WidgetSmallProvider},
+ * {@link WidgetWideProvider} and {@link WidgetLargeProvider}. Subclasses only exist so the launcher
+ * shows separate entries; all lifecycle callbacks and data handling live here.
+ */
+public class ScriptWidgetProvider extends AppWidgetProvider {
     private static final String STORE = "widget-preview";
     static final String ACTION_BOUND = "dev.scriptable.android.WIDGET_BOUND";
     static final String ACTION_REFRESH = "dev.scriptable.android.WIDGET_REFRESH";
@@ -39,7 +47,7 @@ public final class ScriptWidgetProvider extends AppWidgetProvider {
         JSONObject tree = payload.getJSONObject("tree"); String scriptId = payload.optString("scriptId", ""); validateScript(scriptId);
         String parameter = payload.isNull("parameter") ? "" : payload.optString("parameter", ""), family = payload.optString("family", "medium");
         int target = payload.optInt("targetWidgetId", -1);
-        AppWidgetManager manager = AppWidgetManager.getInstance(context); int[] ids = manager.getAppWidgetIds(new ComponentName(context, ScriptWidgetProvider.class));
+        int[] ids = WidgetProviders.allWidgetIds(context);
         if (target > 0) {
             boolean belongs = false; for (int id : ids) if (id == target) belongs = true;
             if (!belongs) throw new Exception("Widget instance no longer exists");
@@ -73,8 +81,8 @@ public final class ScriptWidgetProvider extends AppWidgetProvider {
         update(context, AppWidgetManager.getInstance(context), widgetId); WidgetRefreshJob.schedule(context);
     }
     static JSONArray instanceConfigs(Context context) throws Exception {
-        JSONArray result = new JSONArray(); AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        for (int id : manager.getAppWidgetIds(new ComponentName(context, ScriptWidgetProvider.class))) {
+        JSONArray result = new JSONArray();
+        for (int id : WidgetProviders.allWidgetIds(context)) {
             String scriptId = store(context).getString("script." + id, ""); if (scriptId.isEmpty()) continue;
             result.put(new JSONObject().put("widgetId", id).put("scriptId", scriptId).put("parameter", store(context).getString("parameter." + id, "")).put("family", store(context).getString("family." + id, "medium")).put("refreshAfterDate", store(context).getLong("refreshAfter." + id, 0)).put("updatedAt", store(context).getLong("updated." + id, 0)));
         }
@@ -84,14 +92,20 @@ public final class ScriptWidgetProvider extends AppWidgetProvider {
         if (payload.has("tree")) save(context, payload);
         AppWidgetManager manager = AppWidgetManager.getInstance(context); if (!manager.isRequestPinAppWidgetSupported()) throw new Exception("This launcher does not support pinning widgets; add Scriptable from the launcher widget menu");
         String script = payload.optString("scriptId", store(context).getString("scriptId", "")); validateScript(script);
+        // A pin request may ask for a specific size; omitting it keeps the original 3x2 behaviour.
+        String requested = payload.optString("widgetSize", payload.optString("size", payload.optString("provider", "")));
+        String size = WidgetProviders.normalizeSize(requested);
+        ComponentName target = WidgetProviders.forSize(context, size);
         String token = UUID.randomUUID().toString();
         JSONObject data = new JSONObject().put("scriptId", script).put("parameter", payload.optString("parameter", store(context).getString("parameter", ""))).put("family", payload.optString("family", store(context).getString("family", "medium")));
         store(context).edit().putString("pending." + token, data.toString()).apply();
+        // One shared receiver handles pin callbacks for every size; the broadcast is explicit
+        // and validated against the provider registry below.
         Intent bound = new Intent(context, ScriptWidgetProvider.class).setAction(ACTION_BOUND).setData(Uri.parse("scriptable-android://widget-bound/" + token)).putExtra("token", token);
         PendingIntent callback = PendingIntent.getBroadcast(context, token.hashCode(), bound, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ONE_SHOT);
-        boolean requested = manager.requestPinAppWidget(new ComponentName(context, ScriptWidgetProvider.class), null, callback);
-        if (!requested) store(context).edit().remove("pending." + token).apply();
-        return new JSONObject().put("requested", requested);
+        boolean pinRequested = manager.requestPinAppWidget(target, null, callback);
+        if (!pinRequested) store(context).edit().remove("pending." + token).apply();
+        return new JSONObject().put("requested", pinRequested).put("size", size).put("grid", WidgetProviders.grid(size)).put("provider", target.getClassName());
     }
     @Override public void onReceive(Context context, Intent intent) {
         if (ACTION_BOUND.equals(intent.getAction())) {
@@ -99,7 +113,7 @@ public final class ScriptWidgetProvider extends AppWidgetProvider {
             if (pending == null) return; store(context).edit().remove("pending." + token).apply();
             int id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
             android.appwidget.AppWidgetProviderInfo info = AppWidgetManager.getInstance(context).getAppWidgetInfo(id);
-            if (info == null || !new ComponentName(context, ScriptWidgetProvider.class).equals(info.provider)) return;
+            if (info == null || !WidgetProviders.isScriptable(context, info.provider)) return;
             try { JSONObject data = new JSONObject(pending); if(!store(context).contains("script."+id))configure(context, id, data.getString("scriptId"), data.optString("parameter"), data.optString("family", "medium"));else WidgetRefreshJob.request(context,new int[]{id}); } catch (Exception ignored) { }
             return;
         }

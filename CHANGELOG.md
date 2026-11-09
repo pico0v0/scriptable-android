@@ -1,5 +1,16 @@
 # 更新记录
 
+## 未发布
+
+- 系统「添加小部件」列表新增 8 个独立尺寸条目：2×2、3×2（原标准）、4×2、4×3、4×4、4×5、4×6、4×7，各自带独立 Provider、尺寸 metadata、名称、描述与预览图。
+- 保留原 `ScriptWidgetProvider` 类名与 `widget_info.xml` 作为 3×2 标准组件；旧桌面组件及其脚本绑定在同签名覆盖升级后继续可用。
+- 新增 `WidgetProviders` 注册表；保存、实例配置、后台刷新、删除与 pin 成功回调改为遍历全部 Provider，不再只查询单一 Provider。
+- `widget.pin` 支持 `widgetSize`（兼容 `size` / `provider`）指定尺寸，应用内「添加到主屏幕」增加 8 项尺寸下拉；配置页显示当前组件尺寸。
+- 所有尺寸使用 `targetCellWidth` / `targetCellHeight`（Android 12+）与 `minWidth` / `minHeight`、`minResizeWidth` / `minResizeHeight`、`resizeMode`（旧版）；移除 `configuration_optional`，保证添加时进入配置页，保留 `reconfigurable` 供长按重新配置。
+- 新增 7 项 Robolectric 回归，覆盖 8 尺寸注册、尺寸别名解析、生命周期继承、多实例配置互不覆盖与删除隔离；同步 README、兼容说明、呈现契约及新增的 `docs/widget-sizes.md` 实现说明。
+- 验证：`./gradlew testDebugUnitTest assembleDebug lint`（17/17 单测、lint 0 error / 48 warning）、`npm test`（122/122）、`npm run test:ui`、`node tools/check-api-surface.cjs`（731/731），并用 `aapt2` 核对 APK 内 8 个 receiver 与 8 份 metadata。
+- 待小米 HyperOS 实机测试：选择器条目与预览图、默认网格是否被裁剪（尤其 4×7）、多实例配置/刷新/删除。渲染仍受 250000 像素位图上限约束，本阶段未改造 Canvas 渲染、高清字体或尺寸自适应 JS API。
+
 ## 0.2.1
 
 - 修复默认 Alert 文本框颜色为 JSON `null` 时触发 `Unknown color`，影响问候与随手记等示例。
